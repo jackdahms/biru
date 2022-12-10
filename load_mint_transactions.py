@@ -19,8 +19,12 @@ for filepath in filepaths:
             raise Error(f'Columns do not equal expected columns in {filepath}!')
         
         for tx in reader:
-            tx_id = hashlib.sha256((tx[0] + tx[1] + tx[3] + tx[4]).encode('utf-8')).hexdigest()
-            data.append((tx_id, tx[0], tx[1], tx[3], tx[4], tx[5], tx[6]))
+            old_date = tx[0]
+            month, day, year = [int(x) for x in old_date.split('/')]
+            new_date = f'{year}-{month:02d}-{day:02d}'
+
+            tx_id = hashlib.sha256((new_date + tx[1] + tx[3] + tx[4]).encode('utf-8')).hexdigest()
+            data.append((tx_id, new_date, tx[1], tx[3], tx[4], tx[5], tx[6]))
 
         cur.executemany('INSERT OR IGNORE INTO transactions VALUES(?, ?, ?, ?, ?, ?, ?)', data)
         con.commit()
