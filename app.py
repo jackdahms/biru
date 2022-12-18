@@ -48,13 +48,13 @@ def transactions():
     cur.execute(f'''
         SELECT * FROM transactions
         WHERE date >= '{start}' AND date < '{end}'
+        AND type == 'debit'
     ''')
 
     txs = []
     categories = {}
     for row in cur:
-        txs.append(row)
-
+        # shift to parent category
         cat = row[5]
         if cat in parent_category:
             cat = parent_category[cat]
@@ -62,9 +62,15 @@ def transactions():
             categories[cat] = float(row[3])
         else:
             categories[cat] += float(row[3])
+        
+        # correct tx to parent category
+        row = [*row]
+        row[5] = cat 
+        txs.append(row)
 
     return {
         'rows': render_template('rows.html', transactions=txs),
+        'list': render_template('checkboxes.html', categories=categories.keys()),
         'categories': list(categories.keys()),
         'amounts': list(categories.values())
     }

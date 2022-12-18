@@ -1,10 +1,10 @@
 {% for transaction in transactions %}
     <tr>
-        <td>{{ transaction[1] }}</td>
-        <td>{{ transaction[2] }}</td>
-        <td>{{ transaction[3] }}</td>
-        <td>{{ transaction[4] }}</td>
-        <td>{{ transaction[5] }}</td>
-        <td>{{ transaction[6] }}</td>
+        <td class="date">{{ transaction[1] }}</td>
+        <td class="description">{{ transaction[2] }}</td>
+        <td class="amount">{{ transaction[3] }}</td>
+        <!-- <td class="type">{{ transaction[4] }}</td> -->
+        <td class="category">{{ transaction[5] }}</td>
+        <td class="account">{{ transaction[6] }}</td>
     </tr>
 {% endfor %}

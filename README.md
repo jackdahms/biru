@@ -2,11 +2,19 @@
 Budget reporting
 
 Todo:
-- arrow buttons
-- pie chart
-- category dropdowns
-- pull transactions from mint
+- button pull transactions from mint
+- set transaction date to first and last of current month on initial load
 
+- arrow buttons to adjust months
+- Summary displays for start date's month
+
+- credits
+- hide/check all
+- subcategory management
+- Summary respects selected dates, not just months
+    - Averages shown per month?
+- budget bars
+- Review budgets over time
 - Grocery store receipt OCR
 - sub-categories
 - edit category
@@ -23,14 +31,4 @@ Schema:
     g. category - text
     f. account - text
 
-    
-"{% for transaction in transactions %}
-                <tr>
-                    <td>{{ transaction[1] }}</td>
-                    <td>{{ transaction[2] }}</td>
-                    <td>{{ transaction[3] }}</td>
-                    <td>{{ transaction[4] }}</td>
-                    <td>{{ transaction[5] }}</td>
-                    <td>{{ transaction[6] }}</td>
-                </tr>
-            {% endfor %}"
+

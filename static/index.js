@@ -1,5 +1,4 @@
 const pie_canvas = document.getElementById('pie');
-
 const pieLabelsLine = {
     id: 'pieLabelsLine',
     afterDraw(chart) {
@@ -48,7 +47,6 @@ const pieLabelsLine = {
             });
         });
 
-        console.log('---');
         for (let i = 0; i < values.length; i++) {
             for (let k = i + 1; k < values.length; k++) {
                 if (i == k) {
@@ -73,13 +71,13 @@ const pieLabelsLine = {
                     rect1.y < rect2.y + rect2.h &&
                     rect1.h + rect1.y > rect2.y
                 ) {
-                    if (rect1.x > halfwidth && rect1.y < halfheight) {
+                    if (rect2.x > halfwidth && rect2.y < halfheight) {
                         values[i].y_line -= (values[i].y_line + text_height) - values[k].y_line + text_padding;
-                    } else if (rect1.x > halfwidth && rect1.y > halfheight) {
+                    } else if (rect2.x > halfwidth && rect2.y > halfheight) {
                         values[k].y_line += (values[i].y_line + text_height) - values[k].y_line + text_padding;
-                    } else if (rect1.x < halfwidth && rect1.y > halfheight) {
+                    } else if (rect2.x < halfwidth && rect2.y > halfheight) {
                         values[i].y_line += (values[k].y_line + text_height) - values[i].y_line + text_padding;
-                    } else if (rect1.x < halfwidth && rect1.y < halfheight) {
+                    } else if (rect2.x < halfwidth && rect2.y < halfheight) {
                         values[k].y_line -= (values[k].y_line + text_height) - values[i].y_line + text_padding;
                     }
                     i = 0;
@@ -111,7 +109,7 @@ const pieLabelsLine = {
                 ctx.textAlign = values[index].text_x_pos;
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "black";
-                ctx.fillText(chart.data.labels[index] + index, values[index].text_x, yLine);
+                ctx.fillText(chart.data.labels[index], values[index].text_x, yLine);
             });
         });
     },
@@ -120,12 +118,13 @@ const pieLabelsLine = {
 const config = {
     type: 'pie',
     options: {
-        cutout: '50%', // note the x and y equations only work at this cutoff percentage (and maybe this aspect ratio!) for a full pie, they are 2a-cx
-        aspectRatio: 2,
+        cutout: '50%', // note the x and y equations only work at this cutoff percentage (for a full pie, they are 2a-cx)
+        aspectRatio: 1.5,
+        responsive: false,
         layout: {
             padding: {
-                top: 50,
-                bottom: 30,
+                top: 80,
+                bottom: 80,
             },
         },
         plugins: {
@@ -137,6 +136,89 @@ const config = {
     plugins: [pieLabelsLine]
 };
 
+// Sort transaction table columns when clicked. Bubble sort from https://www.w3schools.com/howto/howto_js_sort_table.asp
+const sort_table = function(n) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = $("#table")[0];
+    arrow = $("#arrow");
+    arrow.detach();
+
+    switching = true;
+    dir = "asc";
+    arrow.appendTo($(".tx_th")[n]);
+
+    // Make a loop that will continue until no switching has been done
+    while (switching) {
+        switching = false;
+        rows = table.rows;
+
+        for (i = 1; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            // Get the two elements you want to compare, one from current row and one from the next: */
+            x = rows[i].getElementsByTagName("TD")[n].innerHTML.toLowerCase();
+            y = rows[i + 1].getElementsByTagName("TD")[n].innerHTML.toLowerCase();
+            if (n == 2) {
+                x = parseFloat(x);
+                y = parseFloat(y);
+            }
+
+            /* Check if the two rows should switch place, based on the direction, asc or desc: */
+            if (dir == "asc") {
+                if (x > y) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else if (dir == "desc") {
+                if (x < y) {
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+        }
+
+        if (shouldSwitch) {
+            /* If a switch has been marked, make the switch and mark that a switch has been done: */
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount ++;
+        } else {
+            /* If no switching has been done AND the direction is "asc", set the direction to "desc" and run the while loop again. */
+            if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+            }
+        }
+    }
+    if (dir == "asc") {
+        arrow.removeClass("down");
+        arrow.addClass("up");
+    } else if (dir == "desc") {
+        arrow.removeClass("up");
+        arrow.addClass("down");
+    }
+};
+$(".tx_th").each((i, e) => {
+    e.onclick = (() => sort_table(i));
+});
+
+// Filter transactions based on checkboxes
+const filter = function() {
+    const name = $(this).attr("name"); 
+    const rows = $("tr");
+    for (let i = 1; i < rows.length; i++) {
+        let row = $(rows[i]);
+        const cat = row.find("td")[3].innerText;
+        if (cat == name) {
+            if ($(this).is(":checked")) {
+                row.show();
+            } else {
+                row.hide();
+            }
+        }
+    }
+};
+
+// Initial load
 $.ajax({
     dataType: "json",
     url: '/transactions',
@@ -146,12 +228,7 @@ $.ajax({
     },
     success: function(data, status, xhr) {
         $('#table').append(data.rows);
-
-        cats = $('#categories');
-        cats.empty();
-        data.categories.forEach(function(e) {
-            cats.append('<li>' + e + '</li>');
-        });
+        $('#categories').append(data.list);
 
         config.data = {
             labels: data.categories,
@@ -162,5 +239,7 @@ $.ajax({
             }]
         };
         new Chart(pie_canvas, config);
+
+        $("[type='checkbox']").click(filter);
     }
 });
